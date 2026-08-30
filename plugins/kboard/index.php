@@ -448,6 +448,9 @@ function kboard_updates(){
 	$action = isset($_GET['action'])?kboard_htmlclear($_GET['action']):'';
 	$download_url = isset($_GET['download_url'])?kboard_htmlclear($_GET['download_url']):'';
 	$download_version = isset($_GET['download_version'])?kboard_htmlclear($_GET['download_version']):'';
+	if($action){
+		check_admin_referer('kboard_updates');
+	}
 	$form_url = add_query_arg(array(
 		'page'             => 'kboard_updates',
 		'action'           => $action,
