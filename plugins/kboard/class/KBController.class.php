@@ -139,14 +139,17 @@ class KBController {
 					}
 					
 					if($last_content && $last_content->uid){
-						$ago = current_time('timestamp') - strtotime($last_content->date);
-						$remaining = ($board->meta->new_document_delay * 60) - $ago;
-						
-						if($remaining > 60){
-							die('<script>alert("'.sprintf(__('You can create a new post after %d minutes.', 'kboard'), round($remaining/60)).'");history.go(-1);</script>');
-						}
-						else if($remaining > 0){
-							die('<script>alert("'.sprintf(__('You can create a new post after %d seconds.', 'kboard'), $remaining).'");history.go(-1);</script>');
+						$date_timestamp = kboard_date_to_timestamp($last_content->date);
+						if($date_timestamp !== false){
+							$ago = current_time('timestamp') - $date_timestamp;
+							$remaining = ($board->meta->new_document_delay * 60) - $ago;
+
+							if($remaining > 60){
+								die('<script>alert("'.sprintf(__('You can create a new post after %d minutes.', 'kboard'), round($remaining/60)).'");history.go(-1);</script>');
+							}
+							else if($remaining > 0){
+								die('<script>alert("'.sprintf(__('You can create a new post after %d seconds.', 'kboard'), $remaining).'");history.go(-1);</script>');
+							}
 						}
 					}
 				}

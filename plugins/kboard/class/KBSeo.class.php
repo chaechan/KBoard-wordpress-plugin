@@ -257,13 +257,19 @@ class KBSeo {
 	 */
 	public function date(){
 		$timezone_string = get_option('timezone_string');
+		$published_timestamp = kboard_date_to_timestamp($this->content->date, $timezone_string);
+		$modified_timestamp = kboard_date_to_timestamp($this->content->update, $timezone_string);
 		
-		echo '<meta name="article:published_time" content="' . date('c', strtotime("{$timezone_string} {$this->content->date}")) . '">';
-		echo "\n";
-		echo '<meta name="article:modified_time" content="' . date('c', strtotime("{$timezone_string} {$this->content->update}")) . '">';
-		echo "\n";
-		echo '<meta name="og:updated_time" content="' . date('c', strtotime("{$timezone_string} {$this->content->update}")) . '">';
-		echo "\n";
+		if($published_timestamp !== false){
+			echo '<meta name="article:published_time" content="' . date('c', $published_timestamp) . '">';
+			echo "\n";
+		}
+		if($modified_timestamp !== false){
+			echo '<meta name="article:modified_time" content="' . date('c', $modified_timestamp) . '">';
+			echo "\n";
+			echo '<meta name="og:updated_time" content="' . date('c', $modified_timestamp) . '">';
+			echo "\n";
+		}
 	}
 	
 	/**

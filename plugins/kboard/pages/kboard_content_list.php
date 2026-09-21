@@ -39,9 +39,19 @@
 </div>
 
 <script>
-function kboard_content_list_update(){
+function kboard_content_list_update(uid){
+	uid = parseInt(uid, 10);
+	if(!uid){
+		return false;
+	}
+
+	var row = jQuery('#kboard-content-list tr[data-uid="' + uid + '"]');
+	if(!row.length){
+		return false;
+	}
+
 	jQuery('#kboard-content-list').find('.spinner').addClass('is-active');
-	jQuery.post(ajaxurl, jQuery('#kboard-content-list').serialize()+'&action=kboard_content_list_update', function(res){
+	jQuery.post(ajaxurl, row.find(':input').serialize()+'&content_uid='+uid+'&action=kboard_content_list_update', function(res){
 		jQuery('#kboard-content-list').find('.spinner').removeClass('is-active');
 	});
 	return false;

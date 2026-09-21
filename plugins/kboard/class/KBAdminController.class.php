@@ -517,8 +517,8 @@ class KBAdminController {
 					while($content = $list->hasNext()){
 						$row_data = $content->toArray();
 						
-						$row_data['date'] = date('Y-m-d H:i:s', strtotime($row_data['date']));
-						$row_data['update'] = date('Y-m-d H:i:s', strtotime($row_data['update']));
+						$row_data['date'] = kboard_date_format($row_data['date'], 'Y-m-d H:i:s');
+						$row_data['update'] = kboard_date_format($row_data['update'], 'Y-m-d H:i:s');
 						
 						$option_mode = $_GET['kboard_csv_download_option'] ?? '';
 						$skin_fields = $fields->getSkinFields();
@@ -641,7 +641,8 @@ class KBAdminController {
 								if($length){
 									// 데이터
 									if($columns[$index] == 'date' || $columns[$index] == 'update'){
-										$value = date('YmdHis', strtotime($value));
+										$timestamp = kboard_date_to_timestamp($value);
+										$value = $timestamp === false ? '' : date('YmdHis', $timestamp);
 									}
 									
 									$decode_value = json_decode($value);
@@ -767,16 +768,45 @@ class KBAdminController {
 	 */
 	public function content_list_update(){
 		if(current_user_can('manage_kboard')){
+			$board_ids = isset($_POST['board_id']) && is_array($_POST['board_id']) ? wp_unslash($_POST['board_id']) : array();
+			$statuses = isset($_POST['status']) && is_array($_POST['status']) ? wp_unslash($_POST['status']) : array();
+			$dates = isset($_POST['date']) && is_array($_POST['date']) ? wp_unslash($_POST['date']) : array();
+			$times = isset($_POST['time']) && is_array($_POST['time']) ? wp_unslash($_POST['time']) : array();
+			$status_list = kboard_content_status_list();
+			$uids = array_unique(array_merge(array_keys($board_ids), array_keys($statuses), array_keys($dates), array_keys($times)));
+			$content_uid = isset($_POST['content_uid']) ? intval($_POST['content_uid']) : 0;
+			if($content_uid) $uids = array($content_uid);
 			$content = new KBContent();
-			foreach($_POST['board_id'] as $uid=>$value){
+			foreach($uids as $uid){
+				$uid = intval($uid);
+				if(!$uid) continue;
+
 				$content->initWithUID($uid);
-				
+				if(!$content->uid) continue;
+
 				// 게시글 수정 전에 액션 훅 실행
 				do_action('kboard_pre_content_list_update', $content);
-				
-				$content->board_id = $_POST['board_id'][$uid];
-				$content->status = $_POST['status'][$uid];
-				$content->date = date('YmdHis', strtotime($_POST['date'][$uid] . ' ' . $_POST['time'][$uid]));
+
+				$board_id = isset($board_ids[$uid]) && is_scalar($board_ids[$uid]) ? intval($board_ids[$uid]) : 0;
+				if($board_id) $content->board_id = $board_id;
+
+				if(isset($statuses[$uid]) && is_scalar($statuses[$uid])){
+					$status = sanitize_key($statuses[$uid]);
+					if(array_key_exists($status, $status_list)) $content->status = $status;
+				}
+
+				if(isset($dates[$uid], $times[$uid]) && is_scalar($dates[$uid]) && is_scalar($times[$uid])){
+					$date = sanitize_text_field($dates[$uid]);
+					$time = sanitize_text_field($times[$uid]);
+					$datetime = $date . ' ' . $time;
+					$timestamp = false;
+					if(preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)){
+						$timestamp = strtotime($datetime);
+					}
+					if($timestamp !== false && date('Y-m-d H:i:s', $timestamp) === $datetime){
+						$content->date = date('YmdHis', $timestamp);
+					}
+				}
 				$content->updateContent();
 				
 				// 게시글 수정 액션 훅 실행

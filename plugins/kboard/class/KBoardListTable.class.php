@@ -130,7 +130,7 @@ class KBoardListTable extends WP_List_Table {
 		echo '</td>';
 		
 		echo '<td>';
-		echo date('Y-m-d H:i:s', strtotime($item->created));
+		echo esc_html(kboard_date_format($item->created, 'Y-m-d H:i:s'));
 		echo '</td>';
 		
 		echo '</tr>';

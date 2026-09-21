@@ -24,6 +24,43 @@ function kboard_array_filter($array, $whitelist){
 }
 
 /**
+ * KBoard 날짜 값을 Unix timestamp로 변환한다.
+ *
+ * KBoard는 게시글 날짜를 YmdHis 형식으로 저장하지만 strtotime()은 이
+ * 형식을 모든 PHP 버전에서 안정적으로 해석하지 못한다. 저장 형식을 먼저
+ * 명시적인 날짜 문자열로 변환한 뒤 파싱해 잘못된 값이 Unix epoch로
+ * 대체되지 않도록 한다.
+ *
+ * @param string $date
+ * @param string $timezone
+ * @return int|false
+ */
+function kboard_date_to_timestamp($date, $timezone=''){
+	$date = trim((string)$date);
+	if(!$date) return false;
+
+	if(preg_match('/^\d{14}$/', $date)){
+		$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2) . ' ' . substr($date, 8, 2) . ':' . substr($date, 10, 2) . ':' . substr($date, 12, 2);
+	}
+
+	if($timezone) $date = $timezone . ' ' . $date;
+	$timestamp = strtotime($date);
+	return $timestamp === false ? false : $timestamp;
+}
+
+/**
+ * KBoard 날짜 값을 지정한 형식으로 출력한다.
+ *
+ * @param string $date
+ * @param string $format
+ * @return string
+ */
+function kboard_date_format($date, $format){
+	$timestamp = kboard_date_to_timestamp($date);
+	return $timestamp === false ? '' : date($format, $timestamp);
+}
+
+/**
  * JSON 인코더
  * @param array $val
  * @return string

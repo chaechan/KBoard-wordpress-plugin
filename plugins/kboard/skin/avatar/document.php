@@ -44,7 +44,7 @@
 				</div>
 				<div class="detail-attr detail-date">
 					<div class="detail-name"><?php echo __('Date', 'kboard')?></div>
-					<div class="detail-value"><?php echo date('Y-m-d H:i', strtotime($content->date))?></div>
+					<div class="detail-value"><?php echo esc_html(kboard_date_format($content->date, 'Y-m-d H:i'))?></div>
 				</div>
 				<div class="detail-attr detail-view">
 					<div class="detail-name"><?php echo __('Views', 'kboard')?></div>

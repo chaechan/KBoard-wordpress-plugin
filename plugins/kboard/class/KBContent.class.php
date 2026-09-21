@@ -1519,7 +1519,8 @@ class KBContent {
 		$is_new = false;
 		if($this->uid){
 			$notify_time = kboard_new_document_notify_time();
-			if((current_time('timestamp')-strtotime($this->date)) <= $notify_time && $notify_time != '1'){
+			$date_timestamp = kboard_date_to_timestamp($this->date);
+			if($date_timestamp !== false && (current_time('timestamp')-$date_timestamp) <= $notify_time && $notify_time != '1'){
 				$is_new = true;
 			}
 		}
@@ -1562,11 +1563,14 @@ class KBContent {
 	public function getDate(){
 		$date = '';
 		if(isset($this->row->date)){
-			if(date('Ymd', current_time('timestamp')) == date('Ymd', strtotime($this->row->date))){
-				$date = date('H:i', strtotime($this->row->date));
-			}
-			else{
-				$date = date('Y.m.d', strtotime($this->row->date));
+			$date_timestamp = kboard_date_to_timestamp($this->row->date);
+			if($date_timestamp !== false){
+				if(date('Ymd', current_time('timestamp')) == date('Ymd', $date_timestamp)){
+					$date = date('H:i', $date_timestamp);
+				}
+				else{
+					$date = date('Y.m.d', $date_timestamp);
+				}
 			}
 		}
 		return apply_filters('kboard_content_date', $date, $this, $this->getBoard());

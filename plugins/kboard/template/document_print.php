@@ -18,7 +18,7 @@
 </head>
 <body onload="window.print()">
 <h1><?php echo esc_html(wp_strip_all_tags($content->title))?></h1>
-<p><?php echo __('Author', 'kboard')?>:<?php echo esc_html($content->member_display)?> / <?php echo __('Date', 'kboard')?>:<?php echo date('Y-m-d H:i:s', strtotime($content->date))?> / <?php echo __('Views', 'kboard')?>:<?php echo number_format($content->view)?></p>
+<p><?php echo __('Author', 'kboard')?>:<?php echo esc_html($content->member_display)?> / <?php echo __('Date', 'kboard')?>:<?php echo esc_html(kboard_date_format($content->date, 'Y-m-d H:i:s'))?> / <?php echo __('Views', 'kboard')?>:<?php echo number_format($content->view)?></p>
 <?php echo $content->getDocumentOptionsHTML()?>
 <?php echo kboard_content_paragraph_breaks($content->content)?>
 </body>
