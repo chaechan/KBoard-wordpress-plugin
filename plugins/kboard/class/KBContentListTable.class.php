@@ -175,7 +175,7 @@ class KBContentListTable extends WP_List_Table {
 					<option value="<?php echo $board->uid?>"><?php echo $board->board_name?></option>
 					<?php endforeach?>
 				</select>
-				<input type="button" class="button" value="이동" onclick="kboard_content_list_move_to_board()">
+				<button type="submit" name="kboard_content_list_move_to_board" value="1" class="button" onclick="return kboard_content_list_move_to_board(this.form)">이동</button>
 			</div>
 			<?php endif?>
 			<?php

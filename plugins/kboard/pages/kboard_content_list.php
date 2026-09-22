@@ -41,6 +41,10 @@
 
 <script>
 function kboard_content_list_confirm_bulk_action(form){
+	if(form.getAttribute('data-kboard-move-submission') == '1'){
+		return true;
+	}
+
 	var action = jQuery('select[name=action]', form).val();
 	var action2 = jQuery('select[name=action2]', form).val();
 
@@ -48,6 +52,34 @@ function kboard_content_list_confirm_bulk_action(form){
 		return window.confirm('선택한 게시글을 영구 삭제합니다. 삭제 후 복구할 수 없습니다. 계속하시겠습니까?');
 	}
 
+	return true;
+}
+
+function kboard_content_list_move_to_board(form){
+	if(!form){
+		form = document.getElementById('kboard-content-list');
+	}
+	if(!form){
+		return false;
+	}
+
+	var board_id = jQuery('#move-to-board', form).val();
+	if(!board_id){
+		alert('게시판을 선택해주세요.');
+		return false;
+	}
+
+	var selected = jQuery('input[name="uid[]"]:checked', form);
+	if(!selected.length){
+		alert('이동할 게시글을 선택해주세요.');
+		return false;
+	}
+
+	if(!window.confirm('선택한 게시글과 답글을 선택한 게시판으로 이동합니다. 계속하시겠습니까?')){
+		return false;
+	}
+
+	form.setAttribute('data-kboard-move-submission', '1');
 	return true;
 }
 
@@ -105,18 +137,6 @@ function kboard_content_list_filter(form){
 		url += '&s=' + encodeURIComponent(keyword);
 	}
 	
-	window.location.href = url;
-}
-
-function kboard_content_list_move_to_board(){
-	var board_id = jQuery('#move-to-board').val();
-	if(!board_id){
-		alert('게시판을 선택해주세요.');
-		return false;
-	}
-	var url = '<?php echo admin_url('admin.php') ?>';
-	url += '?page=kboard_list';
-	url += '&uid=' + encodeURIComponent(board_id);
 	window.location.href = url;
 }
 

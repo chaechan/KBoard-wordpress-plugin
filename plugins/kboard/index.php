@@ -707,7 +707,77 @@ function kboard_updates(){
 function kboard_content_list(){
 	include_once 'class/KBContentListTable.class.php';
 	$table = new KBContentListTable();
-	if(isset($_POST['uid']) && is_array($_POST['uid'])){
+	if(isset($_POST['kboard_content_list_move_to_board'])){
+		if(!current_user_can('manage_kboard')){
+			wp_die(__('You do not have permission.', 'kboard'));
+		}
+
+		check_admin_referer('kboard_content_list_bulk_action', 'kboard_content_list_nonce');
+
+		$posted_target_board_id = isset($_POST['move_to_board']) ? wp_unslash($_POST['move_to_board']) : '';
+		$target_board_id = is_scalar($posted_target_board_id) ? intval($posted_target_board_id) : 0;
+		$target_board = new KBoard($target_board_id);
+		if($target_board->id && isset($_POST['uid']) && is_array($_POST['uid'])){
+			global $wpdb;
+
+			$selected_uids = array();
+			$posted_uids = wp_unslash($_POST['uid']);
+			foreach($posted_uids as $value){
+				if(is_scalar($value)){
+					$uid = intval($value);
+					if($uid) $selected_uids[$uid] = $uid;
+				}
+			}
+
+			$root_uids = array();
+			$content = new KBContent();
+			foreach($selected_uids as $uid){
+				$content->initWithUID($uid);
+				if(!$content->uid) continue;
+
+				$root_uid = intval($content->getTopContentUID());
+				if($root_uid) $root_uids[$root_uid] = $root_uid;
+			}
+
+			$move_uids = array();
+			$queue = array_values($root_uids);
+			$queue_index = 0;
+			while(isset($queue[$queue_index])){
+				$uid = intval($queue[$queue_index]);
+				$queue_index++;
+				if(!$uid || isset($move_uids[$uid])) continue;
+
+				$move_uids[$uid] = $uid;
+				$child_uids = $wpdb->get_col($wpdb->prepare("SELECT `uid` FROM `{$wpdb->prefix}kboard_board_content` WHERE `parent_uid`=%d ORDER BY `uid` ASC", $uid));
+				foreach($child_uids as $child_uid){
+					$child_uid = intval($child_uid);
+					if($child_uid && !isset($move_uids[$child_uid])) $queue[] = $child_uid;
+				}
+			}
+
+			$source_board_ids = array();
+			foreach($move_uids as $uid){
+				$content->initWithUID($uid);
+				if(!$content->uid) continue;
+
+				$source_board_id = intval($content->board_id);
+				if(!$source_board_id || $source_board_id == $target_board_id) continue;
+
+				$source_board_ids[$source_board_id] = $source_board_id;
+				do_action('kboard_pre_content_list_update', $content);
+				$content->board_id = $target_board_id;
+				$content->updateContent();
+				do_action('kboard_content_list_update', $content);
+			}
+
+			$source_board_ids[$target_board_id] = $target_board_id;
+			foreach($source_board_ids as $board_id){
+				$board = new KBoard($board_id);
+				if($board->id) $board->resetTotal();
+			}
+		}
+	}
+	else if(isset($_POST['uid']) && is_array($_POST['uid'])){
 		$action = $table->current_action();
 		if(in_array($action, array('delete', 'delete_immediately'), true)){
 			check_admin_referer('kboard_content_list_bulk_action', 'kboard_content_list_nonce');
