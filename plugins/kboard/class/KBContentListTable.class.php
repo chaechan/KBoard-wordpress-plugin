@@ -264,11 +264,13 @@ class KBContentListTable extends WP_List_Table {
 			else if($key == 'date'){
 				$date_value = kboard_date_format($item->date, 'Y-m-d');
 				$time_value = kboard_date_format($item->date, 'H:i:s');
-				echo '<td class="kboard-content-list-date">';
-				echo '<div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">';
-				echo '<input type="text" name="date['.$item->uid.']" class="kboard-content-datepicker" size="10" maxlength="10" value="'.esc_attr($date_value).'" style="width: 95px;">';
-				echo '<input type="text" name="time['.$item->uid.']" class="kboard-content-timepicker" size="8" maxlength="8" value="'.esc_attr($time_value).'" style="width: 75px;">';
-				echo '<button type="button" class="button button-small" onclick="kboard_content_list_update('.intval($item->uid).')">'.__('Update', 'kboard').'</button>';
+				echo '<td class="kboard-content-list-date" data-colname="'.__('Date', 'kboard').'">';
+				echo '<div class="kboard-content-date-controls">';
+				echo '<div class="kboard-content-date-fields">';
+				echo '<input type="text" name="date['.$item->uid.']" class="kboard-content-datepicker kboard-content-date-input" size="10" maxlength="10" value="'.esc_attr($date_value).'" aria-label="작성일">';
+				echo '<input type="text" name="time['.$item->uid.']" class="kboard-content-timepicker kboard-content-time-input" size="8" maxlength="8" value="'.esc_attr($time_value).'" aria-label="작성 시간">';
+				echo '</div>';
+				echo '<button type="button" class="button button-small kboard-content-date-update" onclick="kboard_content_list_update('.intval($item->uid).')">'.__('Update', 'kboard').'</button>';
 				echo '</div>';
 				echo '</td>';
 			}

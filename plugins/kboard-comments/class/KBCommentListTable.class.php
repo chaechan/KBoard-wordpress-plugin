@@ -138,10 +138,12 @@ class KBCommentListTable extends WP_List_Table {
 		echo '</td>';
 		
 		echo '<td class="kboard-comments-list-date" data-colname="'.__('Date', 'kboard-comments').'">';
-		echo '<div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">';
-		echo '<input type="text" name="comment_date['.$item->uid.']" class="kboard-comment-content-datepicker" size="10" maxlength="10" value="'.date('Y-m-d', strtotime($item->created)).'" style="width: 95px;">';
-		echo '<input type="text" name="comment_time['.$item->uid.']" class="kboard-comment-content-timepicker" size="8" maxlength="8" value="'.date('H:i:s', strtotime($item->created)).'" style="width: 75px;">';
-		echo '<button type="button" class="button button-small" onclick="kboard_comment_list_update('.$item->uid.')">'.__('Update', 'kboard').'</button>';
+		echo '<div class="kboard-comment-date-controls">';
+		echo '<div class="kboard-comment-date-fields">';
+		echo '<input type="text" name="comment_date['.$item->uid.']" class="kboard-comment-content-datepicker kboard-comment-date-input" size="10" maxlength="10" value="'.date('Y-m-d', strtotime($item->created)).'" aria-label="작성일">';
+		echo '<input type="text" name="comment_time['.$item->uid.']" class="kboard-comment-content-timepicker kboard-comment-time-input" size="8" maxlength="8" value="'.date('H:i:s', strtotime($item->created)).'" aria-label="작성 시간">';
+		echo '</div>';
+		echo '<button type="button" class="button button-small kboard-comment-date-update" onclick="kboard_comment_list_update('.$item->uid.')">'.__('Update', 'kboard').'</button>';
 		echo '</div>';
 		echo '</td>';
 		

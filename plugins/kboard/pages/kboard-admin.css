@@ -18,6 +18,68 @@
 }
 .kboard-content-list { float: left; width: 100%; }
 .kboard-content-list .column-title { width: 40%; }
+.wp-core-ui .kboard-content-list select,
+.wp-core-ui .kboard-comments-list select,
+.wp-core-ui .kboard-content-list-search select,
+.wp-core-ui .kboard-comments-list-search select {
+	height: 32px;
+	min-height: 32px;
+	padding: 0 22px 0 8px;
+	font-size: 13px;
+	line-height: 2.30769231;
+}
+.kboard-content-list .column-date,
+.kboard-comments-list .column-date {
+	width: 225px;
+	min-width: 225px;
+}
+.kboard-content-list-date .kboard-content-date-controls,
+.kboard-comments-list-date .kboard-comment-date-controls {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: nowrap;
+	white-space: nowrap;
+}
+.kboard-content-date-fields,
+.kboard-comment-date-fields {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.kboard-content-date-controls .kboard-content-date-input,
+.kboard-comment-date-controls .kboard-comment-date-input {
+	width: 88px;
+}
+.kboard-content-date-controls .kboard-content-time-input,
+.kboard-comment-date-controls .kboard-comment-time-input {
+	width: 76px;
+}
+.kboard-content-date-controls .kboard-content-date-update,
+.kboard-comment-date-controls .kboard-comment-date-update {
+	flex: 0 0 auto;
+}
+.kboard-content-date-controls input,
+.kboard-comment-date-controls input {
+	height: 32px;
+	min-height: 32px;
+	padding: 0 6px;
+	line-height: 2.14285714;
+}
+.kboard-content-date-controls .button,
+.kboard-comment-date-controls .button {
+	height: 32px;
+	min-height: 32px;
+	padding: 0 6px;
+	line-height: 2.30769231;
+}
+.kboard-content-list-status select,
+.kboard-comments-list-status select {
+	height: 32px;
+	min-height: 32px;
+	padding: 0 24px 0 8px;
+	line-height: 2.14285714;
+}
 .kboard-comments-list-search { float: right; }
 .kboard-comments-list .column-board_name { width: 150px; }
 .kboard-comments-list .column-user_display { width: 100px; }
@@ -26,6 +88,59 @@
 .kboard-comments-list .kboard-comments-open { margin-top: 20px; }
 
 @media screen and (max-width: 782px) {
+	.kboard-content-list .column-date,
+	.kboard-comments-list .column-date {
+		width: auto;
+		min-width: 0;
+	}
+	.wp-core-ui .kboard-content-list select,
+	.wp-core-ui .kboard-comments-list select,
+	.wp-core-ui .kboard-content-list-search select,
+	.wp-core-ui .kboard-comments-list-search select {
+		height: 40px;
+		min-height: 40px;
+		padding: 0 24px 0 12px;
+		font-size: 13px;
+		line-height: 2.71428571;
+	}
+	.kboard-content-list-date .kboard-content-date-controls,
+	.kboard-comments-list-date .kboard-comment-date-controls {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 6px;
+		width: 100%;
+		white-space: normal;
+	}
+	.kboard-content-date-fields,
+	.kboard-comment-date-fields {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 6px;
+		width: 100%;
+	}
+	.kboard-content-date-controls .kboard-content-date-input,
+	.kboard-content-date-controls .kboard-content-time-input,
+	.kboard-comment-date-controls .kboard-comment-date-input,
+	.kboard-comment-date-controls .kboard-comment-time-input {
+		width: 100%;
+		min-width: 0;
+		height: 40px;
+		min-height: 40px;
+		padding: 0 12px;
+		line-height: 2.71428571;
+	}
+	.kboard-content-date-controls .kboard-content-date-update,
+	.kboard-comment-date-controls .kboard-comment-date-update {
+		align-self: flex-end;
+	}
+	.kboard-content-list-status select,
+	.kboard-comments-list-status select {
+		height: 40px;
+		min-height: 40px;
+		padding: 0 24px 0 12px;
+		line-height: 2.71428571;
+	}
 	.kboard-content-list-search > form > select,
 	.kboard-comments-list-search > form > select {
 		height: 40px;
