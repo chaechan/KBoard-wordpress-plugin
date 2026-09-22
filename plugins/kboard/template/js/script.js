@@ -25,6 +25,46 @@ var kboard_ajax_lock = false;
 if(typeof kboard_current == 'undefined') var kboard_current = {};
 if(typeof window.kboard_editor_runtime == 'undefined') window.kboard_editor_runtime = null;
 
+// Handle existing skin delete links before their inline confirmation handlers run.
+document.addEventListener('click', function(event){
+	if(event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey){
+		return;
+	}
+	var link = event.target;
+	while(link && link.nodeName !== 'A'){
+		link = link.parentNode;
+	}
+	if(!link || !link.href){
+		return;
+	}
+	var url;
+	try{
+		url = new URL(link.href, document.baseURI);
+	}
+	catch(error){
+		return;
+	}
+	if(url.origin !== window.location.origin || url.searchParams.get('mod') !== 'remove' || !url.searchParams.get('uid') || !url.searchParams.get('kboard-content-remove-nonce')){
+		return;
+	}
+	event.preventDefault();
+	event.stopImmediatePropagation();
+	var message = typeof kboard_localize_strings !== 'undefined' && kboard_localize_strings.are_you_sure_you_want_to_delete
+		? kboard_localize_strings.are_you_sure_you_want_to_delete : 'Are you sure you want to delete?';
+	if(!window.confirm(message)){
+		return;
+	}
+	var form = document.createElement('form');
+	form.method = 'post';
+	form.action = url.href;
+	if(link.target){
+		form.target = link.target;
+	}
+	form.style.display = 'none';
+	document.body.appendChild(form);
+	form.submit();
+}, true);
+
 jQuery(document).ready(function(){
 	var kboard_mod = kboard_current.mod ? kboard_current.mod : jQuery('input[name=mod]', '.kboard-form').val();
 	if(kboard_mod == 'editor'){

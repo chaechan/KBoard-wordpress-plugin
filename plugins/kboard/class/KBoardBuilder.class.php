@@ -861,7 +861,7 @@ class KBoardBuilder
 	}
 
 	/**
-	 * 게시글 삭제 페이지를 생성한다. (완료 후 바로 리다이렉션)
+	 * 게시글 삭제 페이지를 생성한다. POST 요청에서만 삭제한다.
 	 */
 	public function builderRemove()
 	{
@@ -869,12 +869,11 @@ class KBoardBuilder
 		$url->setBoard($this->board);
 		$url->setPath($this->url);
 
-		if (!isset($_GET['kboard-content-remove-nonce']) || !wp_verify_nonce($_GET['kboard-content-remove-nonce'], 'kboard-content-remove')) {
-			if (!wp_get_referer()) {
-				echo '<script>alert("' . __('This page is restricted from external access.', 'kboard') . '");</script>';
-				echo "<script>window.location.href='{$url->set('mod', 'list')->toString()}';</script>";
-				exit;
-			}
+		$remove_nonce = isset($_GET['kboard-content-remove-nonce']) && is_string($_GET['kboard-content-remove-nonce']) ? $_GET['kboard-content-remove-nonce'] : '';
+		if (!wp_verify_nonce($remove_nonce, 'kboard-content-remove')) {
+			echo '<script>alert("' . __('This page is restricted from external access.', 'kboard') . '");</script>';
+			echo "<script>window.location.href='{$url->set('mod', 'list')->toString()}';</script>";
+			exit;
 		}
 
 		$content = new KBContent($this->board_id);
@@ -895,10 +894,11 @@ class KBoardBuilder
 			exit;
 		}
 
+		$is_delete_request = isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD']) === 'POST';
 		$confirm_view = false;
 		if (!$content->isEditor()) {
 			if ($this->board->permission_write == 'all' && !$content->member_uid) {
-				if (!$content->isConfirm(true)) {
+				if (!$is_delete_request || !$content->isConfirm(true)) {
 					$confirm_view = true;
 				}
 			} else {
@@ -933,6 +933,15 @@ class KBoardBuilder
 			);
 
 			echo $this->skin->load($this->skin_name, 'confirm.php', $vars);
+		} else if (!$is_delete_request) {
+			$remove_url = $url->getContentRemove($content->uid);
+			$document_url = $url->getDocumentURLWithUID($content->uid);
+			echo '<div class="kboard-remove-confirm">';
+			echo '<p>' . esc_html__('Are you sure you want to delete?', 'kboard') . '</p>';
+			echo '<form method="post" action="' . esc_url($remove_url) . '">';
+			echo '<button type="submit">' . esc_html__('Delete', 'kboard') . '</button> ';
+			echo '<a href="' . esc_url($document_url) . '">' . esc_html__('Cancel', 'kboard') . '</a>';
+			echo '</form></div>';
 		} else {
 			$delete_immediately = get_option('kboard_content_delete_immediately');
 

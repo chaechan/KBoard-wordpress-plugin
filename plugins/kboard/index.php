@@ -1448,6 +1448,7 @@ function kboard_scripts(){
 	// 번역 등록
 	$localize = array(
 		'kboard_add_media' => __('KBoard Add Media', 'kboard'),
+		'are_you_sure_you_want_to_delete' => __('Are you sure you want to delete?', 'kboard'),
 		'next' => __('Next', 'kboard'),
 		'prev' => __('Prev', 'kboard'),
 		'required' => __('%s is required.', 'kboard'),
