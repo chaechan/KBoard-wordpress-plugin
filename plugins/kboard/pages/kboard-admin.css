@@ -7,6 +7,15 @@
 .kboard-hide { display: none; }
 
 .kboard-content-list-search { float: right; }
+.kboard-content-list-search > form > select,
+.kboard-comments-list-search > form > select {
+	box-sizing: border-box;
+	height: 32px;
+	min-height: 32px;
+	padding: 0 24px 0 8px;
+	line-height: 2.14285714;
+	vertical-align: middle;
+}
 .kboard-content-list { float: left; width: 100%; }
 .kboard-content-list .column-title { width: 40%; }
 .kboard-comments-list-search { float: right; }
@@ -15,6 +24,16 @@
 .kboard-comments-list .column-content { width: 40%; }
 .kboard-comments-list .column-status { width: 70px; }
 .kboard-comments-list .kboard-comments-open { margin-top: 20px; }
+
+@media screen and (max-width: 782px) {
+	.kboard-content-list-search > form > select,
+	.kboard-comments-list-search > form > select {
+		height: 40px;
+		min-height: 40px;
+		padding: 0 24px 0 12px;
+		line-height: 2.71428571;
+	}
+}
 
 .kbstore-thumbnail { width: 100px; box-sizing: content-box; }
 .kbstore-title { width: 250px; }
