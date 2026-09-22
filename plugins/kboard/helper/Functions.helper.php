@@ -442,7 +442,7 @@ function kboard_use_recaptcha(){
 		$site_key = get_option('kboard_recaptcha_site_key');
 		$secret_key = get_option('kboard_recaptcha_secret_key');
 		
-		if($site_key && $secret_key){
+		if(kboard_recaptcha_type() != 'disabled' && $site_key && $secret_key){
 			$use_recaptcha = true;
 		}
 		else{
@@ -453,15 +453,15 @@ function kboard_use_recaptcha(){
 }
 
 /**
- * 구글 reCAPTCHA 타입(v2/v3)을 반환한다.
+ * 구글 reCAPTCHA 타입(v2/v3/disabled)을 반환한다.
  * @return string
  */
 function kboard_recaptcha_type(){
 	static $recaptcha_type;
 	if($recaptcha_type === null){
-		$recaptcha_type = sanitize_key(get_option('kboard_recaptcha_type'));
-		if(!in_array($recaptcha_type, array('v2', 'v3'))){
-			$recaptcha_type = 'v2';
+		$recaptcha_type = sanitize_key(get_option('kboard_recaptcha_type', ''));
+		if(!in_array($recaptcha_type, array('v2', 'v3'), true)){
+			$recaptcha_type = 'disabled';
 		}
 	}
 	return $recaptcha_type;
@@ -482,13 +482,15 @@ function kboard_recaptcha_v3_action(){
 function kboard_recaptcha_site_key(){
 	static $recaptcha_site_key;
 	if($recaptcha_site_key === null){
-		$recaptcha_site_key = get_option('kboard_recaptcha_site_key');
+		$recaptcha_site_key = get_option('kboard_recaptcha_site_key', '');
 		
-		if(kboard_recaptcha_type() == 'v3'){
-			wp_enqueue_script('recaptcha-v3', add_query_arg('render', $recaptcha_site_key, 'https://www.google.com/recaptcha/api.js'), array(), null, true);
-		}
-		else{
-			wp_enqueue_script('recaptcha');
+		if(kboard_recaptcha_type() != 'disabled' && $recaptcha_site_key){
+			if(kboard_recaptcha_type() == 'v3'){
+				wp_enqueue_script('recaptcha-v3', add_query_arg('render', $recaptcha_site_key, 'https://www.google.com/recaptcha/api.js'), array(), null, true);
+			}
+			else{
+				wp_enqueue_script('recaptcha');
+			}
 		}
 	}
 	return $recaptcha_site_key;

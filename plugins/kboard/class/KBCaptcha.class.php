@@ -61,7 +61,7 @@ class KBCaptcha {
 		if(is_user_logged_in()){
 			return true;
 		}
-		if(isset($_POST['g-recaptcha-response'])){
+		if(kboard_use_recaptcha() && isset($_POST['g-recaptcha-response'])){
 			if($this->recaptcha()){
 				return true;
 			}
@@ -80,6 +80,10 @@ class KBCaptcha {
 	 * @return boolean
 	 */
 	function recaptcha(){
+		if(!kboard_use_recaptcha()){
+			return false;
+		}
+
 		$siteverify_url = add_query_arg(array(
 				'secret'   => kboard_recaptcha_secret_key(),
 				'response' => isset($_POST['g-recaptcha-response']) ? $_POST['g-recaptcha-response'] : '',
