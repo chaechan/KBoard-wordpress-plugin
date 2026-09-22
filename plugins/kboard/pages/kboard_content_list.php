@@ -32,13 +32,25 @@
 		</form>
 	</div>
 	<div class="kboard-content-list">
-		<form id="kboard-content-list" method="post">
+		<form id="kboard-content-list" method="post" onsubmit="return kboard_content_list_confirm_bulk_action(this)">
+			<?php wp_nonce_field('kboard_content_list_bulk_action', 'kboard_content_list_nonce')?>
 			<?php $table->display()?>
 		</form>
 	</div>
 </div>
 
 <script>
+function kboard_content_list_confirm_bulk_action(form){
+	var action = jQuery('select[name=action]', form).val();
+	var action2 = jQuery('select[name=action2]', form).val();
+
+	if(action == 'delete' || action == 'delete_immediately' || action2 == 'delete' || action2 == 'delete_immediately'){
+		return window.confirm('선택한 게시글을 영구 삭제합니다. 삭제 후 복구할 수 없습니다. 계속하시겠습니까?');
+	}
+
+	return true;
+}
+
 function kboard_content_list_update(uid){
 	uid = parseInt(uid, 10);
 	if(!uid){

@@ -126,6 +126,9 @@ class KBContentListTable extends WP_List_Table {
 		if($this->filter_view == 'trash'){
 			$actions['delete'] = __('Delete Permanently', 'kboard');
 		}
+		else{
+			$actions['delete_immediately'] = __('Delete Permanently', 'kboard');
+		}
 		
 		return $actions;
 	}

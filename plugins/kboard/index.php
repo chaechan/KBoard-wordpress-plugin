@@ -707,12 +707,21 @@ function kboard_updates(){
 function kboard_content_list(){
 	include_once 'class/KBContentListTable.class.php';
 	$table = new KBContentListTable();
-	if(isset($_POST['uid'])){
+	if(isset($_POST['uid']) && is_array($_POST['uid'])){
 		$action = $table->current_action();
+		if(in_array($action, array('delete', 'delete_immediately'), true)){
+			check_admin_referer('kboard_content_list_bulk_action', 'kboard_content_list_nonce');
+		}
+
 		$content = new KBContent();
-		if($action == 'delete'){
+		if(in_array($action, array('delete', 'delete_immediately'), true)){
 			foreach($_POST['uid'] as $key=>$value){
-				$content->initWithUID($value);
+				$uid = intval($value);
+				if(!$uid) continue;
+
+				$content->initWithUID($uid);
+				if(!$content->uid) continue;
+
 				$content->remove();
 			}
 		}

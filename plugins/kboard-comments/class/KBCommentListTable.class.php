@@ -9,12 +9,15 @@ class KBCommentListTable extends WP_List_Table {
 	
 	var $list;
 	var $url;
+	var $per_page;
 	
 	public function __construct(){
 		parent::__construct();
 		
 		$this->list = new KBCommentList();
 		$this->url = new KBUrl();
+		$per_page = isset($_REQUEST['per_page']) && is_scalar($_REQUEST['per_page']) ? intval($_REQUEST['per_page']) : 20;
+		$this->per_page = in_array($per_page, array(10, 20, 30, 50, 100), true) ? $per_page : 20;
 	}
 	
 	public function prepare_items(){
@@ -26,7 +29,7 @@ class KBCommentListTable extends WP_List_Table {
 		$keyword = isset($_GET['s'])?esc_attr($_GET['s']):'';
 		$target = kboard_target();
 		
-		$this->list->rpp = 20;
+		$this->list->rpp = $this->per_page;
 		$this->list->page = $this->get_pagenum();
 		$this->list->initWithKeyword($keyword, $target);
 		$this->items = $this->list->resource;
@@ -67,6 +70,15 @@ class KBCommentListTable extends WP_List_Table {
 			<div class="alignleft actions bulkactions"><?php $this->bulk_actions($which)?></div>
 			<?php if($which=='top'):?>
 			<div class="alignleft actions">
+				<label class="screen-reader-text" for="comments-per-page">댓글 표시 수</label>
+				<select id="comments-per-page" name="per_page">
+					<option value="10"<?php if($this->per_page == 10):?> selected<?php endif?>>10개씩 보기</option>
+					<option value="20"<?php if($this->per_page == 20):?> selected<?php endif?>>20개씩 보기</option>
+					<option value="30"<?php if($this->per_page == 30):?> selected<?php endif?>>30개씩 보기</option>
+					<option value="50"<?php if($this->per_page == 50):?> selected<?php endif?>>50개씩 보기</option>
+					<option value="100"<?php if($this->per_page == 100):?> selected<?php endif?>>100개씩 보기</option>
+				</select>
+
 				<input type="date" name="start_date" value="<?php echo esc_attr(kboard_start_date()) ?>" placeholder="시작일">
 				<input type="date" name="end_date" value="<?php echo esc_attr(kboard_end_date()) ?>" placeholder="종료일">
 				<input type="button" name="filter_action" class="button" value="<?php echo __('Filter', 'kboard')?>" onclick="kboard_comment_list_filter(this.form)">
