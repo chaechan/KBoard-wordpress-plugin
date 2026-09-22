@@ -60,6 +60,59 @@ function kboard_date_format($date, $format){
 	return $timestamp === false ? '' : date($format, $timestamp);
 }
 
+/** Validate an administrator date without strtotime() normalization. */
+function kboard_admin_valid_date($value){
+	if(!is_string($value) || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $value, $parts)) return false;
+	return checkdate(intval($parts[2]), intval($parts[3]), intval($parts[1]));
+}
+
+/** Validate an administrator time without accepting rollover values. */
+function kboard_admin_valid_time($value){
+	if(!is_string($value) || !preg_match('/^(\d{2}):(\d{2}):(\d{2})$/D', $value, $parts)) return false;
+	return intval($parts[1]) < 24 && intval($parts[2]) < 60 && intval($parts[3]) < 60;
+}
+
+/** Return independently valid components of a stored KBoard timestamp. */
+function kboard_admin_date_parts($value){
+	$parts = array('date'=>'', 'time'=>'');
+	if(!is_string($value)) return $parts;
+	if(preg_match('/^\d{14}$/D', $value)){
+		$parts['date'] = substr($value, 0, 4) . '-' . substr($value, 4, 2) . '-' . substr($value, 6, 2);
+		$parts['time'] = substr($value, 8, 2) . ':' . substr($value, 10, 2) . ':' . substr($value, 12, 2);
+	}
+	else if(preg_match('/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/D', $value, $matches)){
+		$parts['date'] = $matches[1];
+		$parts['time'] = $matches[2];
+	}
+	if(!kboard_admin_valid_date($parts['date'])) $parts['date'] = '';
+	if(!kboard_admin_valid_time($parts['time'])) $parts['time'] = '';
+	return $parts;
+}
+
+/** Resolve a date edit against the components still available in storage. */
+function kboard_admin_resolve_date($stored, $submitted_date, $submitted_time){
+	$old = kboard_admin_date_parts($stored);
+	$date_valid = kboard_admin_valid_date($submitted_date);
+	$time_valid = kboard_admin_valid_time($submitted_time);
+	if(!$date_valid && !$time_valid) return false;
+	$date = $date_valid ? $submitted_date : $old['date'];
+	if(!$date) return false;
+	$time = $time_valid ? $submitted_time : $old['time'];
+	$message = '';
+	if(!$time){
+		if(!$date_valid) return false;
+		$time = '00:00:00';
+		$message = '유효한 시간이 없어 00:00:00으로 저장했습니다.';
+	}
+	else if(!$time_valid){
+		$message = '입력한 시간이 잘못되어 기존 시간을 유지했습니다.';
+	}
+	else if(!$date_valid){
+		$message = '입력한 날짜가 잘못되어 기존 날짜를 유지했습니다.';
+	}
+	return array('value'=>str_replace(array('-', ':'), '', $date . $time), 'date'=>$date, 'time'=>$time, 'message'=>$message);
+}
+
 /**
  * JSON 인코더
  * @param array $val

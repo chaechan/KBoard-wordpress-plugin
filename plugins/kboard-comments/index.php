@@ -231,7 +231,8 @@ add_action('kboard_switch_to_blog', 'kboard_comments_style');
 function kboard_comment_admin_style($hook_suffix){
 	if($hook_suffix == 'kboard_page_kboard_comments_list'){
 		wp_enqueue_script('jquery-ui-datepicker');
-		wp_enqueue_script('jquery-timepicker', KBOARD_COMMENTS_URL_PATH . '/template/js/jquery.timepicker.js', array(), KBOARD_COMMNETS_VERSION);
+		wp_enqueue_script('kboard-admin-timepicker', KBOARD_URL_PATH . '/pages/kboard-admin-timepicker.js', array('jquery'), KBOARD_VERSION);
+		wp_enqueue_style('kboard-admin-timepicker', KBOARD_URL_PATH . '/pages/kboard-admin-timepicker.css', array(), KBOARD_VERSION);
 	}
 	
 	wp_register_script('jquery-timepicker', KBOARD_COMMENTS_URL_PATH . '/template/js/jquery.timepicker.js', array(), KBOARD_COMMNETS_VERSION);

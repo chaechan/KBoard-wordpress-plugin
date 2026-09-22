@@ -1,0 +1,84 @@
+/**
+ * jQuery Timepicker
+ * http://timepicker.co
+ *
+ * Enhances standard form input fields helping users to select (or type) times.
+ *
+ * Copyright (c) 2016 Willington Vega; Licensed MIT, GPL
+ */
+
+ .kboard-admin-timepicker-container {
+    position: absolute;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.kboard-admin-timepicker {
+    box-sizing: content-box;
+    display: block;
+    height: 205px;
+    list-style: none outside none;
+    margin: 0;
+    padding: 0 1px;
+    text-align: center;
+}
+
+.kboard-admin-timepicker-viewport {
+    box-sizing: content-box;
+    display: block;
+    height: 205px;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    overflow-x: hidden; /* IE */
+}
+
+.kboard-admin-timepicker-standard {
+    /* overwrites .ui-widget */
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 1.1em;
+    /* overwrites .ui-widget-content */
+    background-color: #FFF;
+    border: 1px solid #AAA;
+    color: #222;
+    /* overwrites .ui-menu */
+    margin: 0;
+    padding: 2px;
+}
+.kboard-admin-timepicker-standard a {
+    border: 1px solid transparent;
+    color: #222;
+    display: block;
+    padding: 0.2em 0.4em;
+    text-decoration: none;
+}
+.kboard-admin-timepicker-standard .ui-state-hover {
+    /* overwrites .ui-state-hover */
+    background-color: #DADADA;
+    border: 1px solid #999;
+    font-weight: normal;
+    color: #212121;
+}
+.kboard-admin-timepicker-standard .ui-menu-item {
+    /* overwrites .ui-menu and .ui-menu-item */
+    /*clear: left;
+    float: left;*/
+    margin: 0;
+    padding: 0;
+}
+
+.kboard-admin-timepicker-corners,
+.kboard-admin-timepicker-corners .ui-corner-all {
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.kboard-admin-timepicker-hidden {
+    /* overwrites .ui-helper-hidden */
+    display: none;
+}
+
+.kboard-admin-timepicker-no-scrollbar .kboard-admin-timepicker {
+    border: none;
+}

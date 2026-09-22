@@ -515,34 +515,37 @@ class KBCommentController {
 	 * 댓글 정보 업데이트
 	 */
 	public function comments_list_update(){
-		if(current_user_can('manage_kboard')){
-			$status = isset($_POST['status']) ? $_POST['status'] : array();
-			$comment_date = isset($_POST['comment_date']) ? $_POST['comment_date'] : array();
-			$comment_time = isset($_POST['comment_time']) ? $_POST['comment_time'] : array();
-
-			$comment = new KBComment();
-
-			// 상태나 날짜가 하나라도 있으면 처리
-			$uids = array_unique(array_merge(array_keys($status), array_keys($comment_date)));
-
-			foreach($uids as $uid){
-				$comment->initWithUID($uid);
-
-				if(isset($status[$uid])){
-					$comment->status = $status[$uid];
-				}
-				
-				if(isset($comment_date[$uid]) && isset($comment_time[$uid])){
-					$comment->created = date('YmdHis', strtotime($comment_date[$uid] . ' ' . $comment_time[$uid]));
-				}
-
-				$comment->update();
-
-				// 액션 훅 실행
-				do_action('kboard_comments_list_update', $comment);
-			}
+		if(!current_user_can('manage_kboard')) wp_send_json_error(array('message'=>'권한이 없습니다.'), 403);
+		if(!check_ajax_referer('kboard_comments_list_update', 'security', false)) wp_send_json_error(array('message'=>'보안 확인에 실패했습니다. 페이지를 새로고침해 주세요.'), 403);
+		$uid_input = isset($_POST['comment_uid']) && is_scalar($_POST['comment_uid']) ? (string)wp_unslash($_POST['comment_uid']) : '';
+		$uid = preg_match('/^[1-9][0-9]*$/D', $uid_input) ? intval($uid_input) : 0;
+		$field = isset($_POST['update_field']) && is_scalar($_POST['update_field']) ? sanitize_key(wp_unslash($_POST['update_field'])) : '';
+		if($uid < 1 || !in_array($field, array('status', 'date'), true)) wp_send_json_error(array('message'=>'잘못된 수정 요청입니다.'), 400);
+		$comment = new KBComment();
+		$comment->initWithUID($uid);
+		if(!$comment->uid) wp_send_json_error(array('message'=>'댓글을 찾을 수 없습니다.'), 404);
+		$message = '';
+		if($field == 'status'){
+			if(!isset($_POST['value']) || !is_scalar($_POST['value'])) wp_send_json_error(array('message'=>'상태를 선택해 주세요.'), 400);
+			$status = sanitize_key(wp_unslash($_POST['value']));
+			if(!in_array($status, array('', 'pending_approval'), true)) wp_send_json_error(array('message'=>'잘못된 상태입니다.'), 400);
+			$comment->status = $status;
 		}
-		exit;
+		else{
+			if(!isset($_POST['date'], $_POST['time']) || !is_scalar($_POST['date']) || !is_scalar($_POST['time'])) wp_send_json_error(array('message'=>'날짜와 시간을 입력해 주세요.'), 400);
+			$date = sanitize_text_field(wp_unslash($_POST['date']));
+			$time = sanitize_text_field(wp_unslash($_POST['time']));
+			$resolved = kboard_admin_resolve_date($comment->created, $date, $time);
+			if(!$resolved) wp_send_json_error(array('message'=>'유효한 날짜나 시간을 입력해 주세요. 저장된 날짜도 사용할 수 없습니다.'), 400);
+			$comment->created = $resolved['value'];
+			$message = $resolved['message'];
+		}
+		$comment->update();
+		do_action('kboard_comments_list_update', $comment);
+		$saved = new KBComment();
+		$saved->initWithUID($uid);
+		if(!$saved->uid || ($field == 'date' && $saved->created != $resolved['value']) || ($field == 'status' && $saved->status != $status)) wp_send_json_error(array('message'=>'수정 결과를 확인할 수 없습니다. 목록을 새로고침해 주세요.'), 500);
+		wp_send_json_success(array('message'=>$message ? $message : '저장했습니다.', 'date'=>kboard_admin_date_parts($saved->created), 'status'=>$saved->status));
 	}
 	
 	/**

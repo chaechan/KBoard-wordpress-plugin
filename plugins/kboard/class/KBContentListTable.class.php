@@ -211,7 +211,7 @@ class KBContentListTable extends WP_List_Table {
 			else if($key == 'board'){
 				echo '<td class="kboard-content-list-board column-primary">';
 				if($item->board_id){
-					echo '<select name="board_id['.$item->uid.']" onchange="kboard_content_list_update('.intval($item->uid).')">';
+					echo '<select name="board_id['.$item->uid.']" onchange="kboard_content_list_update('.intval($item->uid).', \'board_id\')">';
 					foreach($this->board_list->resource as $board){
 						echo '<option value="'.$board->uid.'"'.($item->board_id==$board->uid?' selected':'').'>'.$board->board_name.'</option>';
 					}
@@ -262,26 +262,28 @@ class KBContentListTable extends WP_List_Table {
 				echo '</td>';
 			}
 			else if($key == 'date'){
-				$date_value = kboard_date_format($item->date, 'Y-m-d');
-				$time_value = kboard_date_format($item->date, 'H:i:s');
+				$date_parts = kboard_admin_date_parts($item->date);
+				$date_value = $date_parts['date'];
+				$time_value = $date_parts['time'];
 				echo '<td class="kboard-content-list-date" data-colname="'.__('Date', 'kboard').'">';
 				echo '<div class="kboard-content-date-controls">';
 				echo '<div class="kboard-content-date-fields">';
 				echo '<input type="text" name="date['.$item->uid.']" class="kboard-content-datepicker kboard-content-date-input" size="10" maxlength="10" value="'.esc_attr($date_value).'" aria-label="작성일">';
 				echo '<input type="text" name="time['.$item->uid.']" class="kboard-content-timepicker kboard-content-time-input" size="8" maxlength="8" value="'.esc_attr($time_value).'" aria-label="작성 시간">';
 				echo '</div>';
-				echo '<button type="button" class="button button-small kboard-content-date-update" onclick="kboard_content_list_update('.intval($item->uid).')">'.__('Update', 'kboard').'</button>';
+				echo '<button type="button" class="button button-small kboard-content-date-update" onclick="kboard_content_list_update('.intval($item->uid).', \'date\')">'.__('Update', 'kboard').'</button>';
 				echo '</div>';
 				echo '</td>';
 			}
 			else if($key == 'status'){
 				echo '<td class="kboard-content-list-status" data-colname="'.__('Status', 'kboard').'">';
-				echo '<select name="status['.$item->uid.']" onchange="kboard_content_list_update('.intval($item->uid).')">';
+				echo '<select name="status['.$item->uid.']" onchange="kboard_content_list_update('.intval($item->uid).', \'status\')">';
 				$status_list = kboard_content_status_list();
 				foreach($status_list as $key=>$value){
 					$selected = ($item->status==$key) ? ' selected' : '';
 					echo '<option value="'.esc_attr($key).'"'.$selected.'>'.esc_html($value).'</option>';
 				}
+				echo '</select>';
 				echo '</td>';
 			}
 			else{

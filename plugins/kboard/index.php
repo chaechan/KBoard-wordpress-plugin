@@ -1664,7 +1664,8 @@ add_filter('script_loader_tag', 'kboard_editor_tiptap_runtime_script_loader_tag'
 function kboard_admin_style($hook_suffix){
 	if($hook_suffix == 'kboard_page_kboard_content_list'){
 		wp_enqueue_script('jquery-ui-datepicker');
-		wp_enqueue_script('jquery-timepicker', KBOARD_URL_PATH . '/template/js/jquery.timepicker.js', array(), KBOARD_VERSION);
+		wp_enqueue_script('kboard-admin-timepicker', KBOARD_URL_PATH . '/pages/kboard-admin-timepicker.js', array('jquery'), KBOARD_VERSION);
+		wp_enqueue_style('kboard-admin-timepicker', KBOARD_URL_PATH . '/pages/kboard-admin-timepicker.css', array(), KBOARD_VERSION);
 	}
 	wp_enqueue_script('kboard-cosmosfarm-apis', KBOARD_URL_PATH . '/pages/cosmosfarm-apis.js', array(), KBOARD_VERSION);
 	wp_enqueue_style('kboard-admin', KBOARD_URL_PATH . '/pages/kboard-admin.css', array(), KBOARD_VERSION);

@@ -34,6 +34,7 @@
 	<div class="kboard-content-list">
 		<form id="kboard-content-list" method="post" onsubmit="return kboard_content_list_confirm_bulk_action(this)">
 			<?php wp_nonce_field('kboard_content_list_bulk_action', 'kboard_content_list_nonce')?>
+			<input type="hidden" id="kboard-content-update-security" value="<?php echo esc_attr(wp_create_nonce('kboard_content_list_update'))?>">
 			<?php $table->display()?>
 		</form>
 	</div>
@@ -83,20 +84,52 @@ function kboard_content_list_move_to_board(form){
 	return true;
 }
 
-function kboard_content_list_update(uid){
+function kboard_content_list_update(uid, field){
 	uid = parseInt(uid, 10);
-	if(!uid){
+	if(!uid || jQuery.inArray(field, ['status', 'board_id', 'date']) === -1){
 		return false;
 	}
 
 	var row = jQuery('#kboard-content-list tr[data-uid="' + uid + '"]');
-	if(!row.length){
+	if(!row.length || row.data('kboard-saving')){
 		return false;
 	}
-
-	jQuery('#kboard-content-list').find('.spinner').addClass('is-active');
-	jQuery.post(ajaxurl, row.find(':input').serialize()+'&content_uid='+uid+'&action=kboard_content_list_update', function(res){
-		jQuery('#kboard-content-list').find('.spinner').removeClass('is-active');
+	var data = {action:'kboard_content_list_update', security:jQuery('#kboard-content-update-security').val(), content_uid:uid, update_field:field};
+	var control = row.find('select[name="' + field + '[' + uid + ']"]');
+	if(field === 'date'){
+		data.date = row.find('input[name="date[' + uid + ']"]').val();
+		data.time = row.find('input[name="time[' + uid + ']"]').val();
+	}
+	else{
+		data.value = control.val();
+	}
+	var result = row.find('.kboard-inline-update-result');
+	if(!result.length){
+		result = jQuery('<span class="kboard-inline-update-result" role="status" aria-live="polite"></span>').appendTo(row.find('.kboard-content-list-date'));
+	}
+	result.text('저장 중…');
+	row.data('kboard-saving', true);
+	row.find('select, .kboard-content-date-update').prop('disabled', true);
+	jQuery.ajax({url:ajaxurl, type:'POST', dataType:'json', data:data}).done(function(response){
+		if(!response || !response.success){
+			result.text(response && response.data && response.data.message ? response.data.message : '저장하지 못했습니다.');
+			if(field !== 'date') control.val(row.data('kboard-saved-' + field));
+			return;
+		}
+		result.text(response.data.message);
+		if(field === 'date'){
+			row.find('input[name="date[' + uid + ']"]').val(response.data.date.date);
+			row.find('input[name="time[' + uid + ']"]').val(response.data.date.time);
+		}
+		else{
+			row.data('kboard-saved-' + field, data.value);
+		}
+	}).fail(function(xhr){
+		result.text(xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message ? xhr.responseJSON.data.message : '통신 오류로 저장하지 못했습니다.');
+		if(field !== 'date') control.val(row.data('kboard-saved-' + field));
+	}).always(function(){
+		row.data('kboard-saving', false);
+		row.find('select, .kboard-content-date-update').prop('disabled', false);
 	});
 	return false;
 }
@@ -141,6 +174,11 @@ function kboard_content_list_filter(form){
 }
 
 jQuery(document).ready(function(){
+	jQuery('#kboard-content-list tr[data-uid]').each(function(){
+		var row = jQuery(this);
+		row.data('kboard-saved-status', row.find('select[name^="status["]').val());
+		row.data('kboard-saved-board_id', row.find('select[name^="board_id["]').val());
+	});
 	jQuery('.kboard-content-datepicker').datepicker({
 		closeText : '닫기',
 		prevText : '이전달',
@@ -160,6 +198,6 @@ jQuery(document).ready(function(){
 		showMonthAfterYear : true,
 		yearSuffix : '년'
 	});
-	jQuery('.kboard-content-timepicker').timepicker({'timeFormat': 'HH:mm:ss'});
+	jQuery('.kboard-content-timepicker').kboardAdminTimepicker({'timeFormat': 'HH:mm:ss'});
 });
 </script>

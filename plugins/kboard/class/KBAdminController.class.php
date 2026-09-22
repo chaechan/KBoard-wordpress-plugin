@@ -767,53 +767,46 @@ class KBAdminController {
 	 * 전체 게시글 정보 업데이트
 	 */
 	public function content_list_update(){
-		if(current_user_can('manage_kboard')){
-			$board_ids = isset($_POST['board_id']) && is_array($_POST['board_id']) ? wp_unslash($_POST['board_id']) : array();
-			$statuses = isset($_POST['status']) && is_array($_POST['status']) ? wp_unslash($_POST['status']) : array();
-			$dates = isset($_POST['date']) && is_array($_POST['date']) ? wp_unslash($_POST['date']) : array();
-			$times = isset($_POST['time']) && is_array($_POST['time']) ? wp_unslash($_POST['time']) : array();
-			$status_list = kboard_content_status_list();
-			$uids = array_unique(array_merge(array_keys($board_ids), array_keys($statuses), array_keys($dates), array_keys($times)));
-			$content_uid = isset($_POST['content_uid']) ? intval($_POST['content_uid']) : 0;
-			if($content_uid) $uids = array($content_uid);
-			$content = new KBContent();
-			foreach($uids as $uid){
-				$uid = intval($uid);
-				if(!$uid) continue;
-
-				$content->initWithUID($uid);
-				if(!$content->uid) continue;
-
-				// 게시글 수정 전에 액션 훅 실행
-				do_action('kboard_pre_content_list_update', $content);
-
-				$board_id = isset($board_ids[$uid]) && is_scalar($board_ids[$uid]) ? intval($board_ids[$uid]) : 0;
-				if($board_id) $content->board_id = $board_id;
-
-				if(isset($statuses[$uid]) && is_scalar($statuses[$uid])){
-					$status = sanitize_key($statuses[$uid]);
-					if(array_key_exists($status, $status_list)) $content->status = $status;
-				}
-
-				if(isset($dates[$uid], $times[$uid]) && is_scalar($dates[$uid]) && is_scalar($times[$uid])){
-					$date = sanitize_text_field($dates[$uid]);
-					$time = sanitize_text_field($times[$uid]);
-					$datetime = $date . ' ' . $time;
-					$timestamp = false;
-					if(preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)){
-						$timestamp = strtotime($datetime);
-					}
-					if($timestamp !== false && date('Y-m-d H:i:s', $timestamp) === $datetime){
-						$content->date = date('YmdHis', $timestamp);
-					}
-				}
-				$content->updateContent();
-				
-				// 게시글 수정 액션 훅 실행
-				do_action('kboard_content_list_update', $content);
-			}
+		if(!current_user_can('manage_kboard')) wp_send_json_error(array('message'=>'권한이 없습니다.'), 403);
+		if(!check_ajax_referer('kboard_content_list_update', 'security', false)) wp_send_json_error(array('message'=>'보안 확인에 실패했습니다. 페이지를 새로고침해 주세요.'), 403);
+		$uid_input = isset($_POST['content_uid']) && is_scalar($_POST['content_uid']) ? (string)wp_unslash($_POST['content_uid']) : '';
+		$uid = preg_match('/^[1-9][0-9]*$/D', $uid_input) ? intval($uid_input) : 0;
+		$field = isset($_POST['update_field']) && is_scalar($_POST['update_field']) ? sanitize_key(wp_unslash($_POST['update_field'])) : '';
+		if($uid < 1 || !in_array($field, array('status', 'board_id', 'date'), true)) wp_send_json_error(array('message'=>'잘못된 수정 요청입니다.'), 400);
+		$content = new KBContent();
+		$content->initWithUID($uid);
+		if(!$content->uid) wp_send_json_error(array('message'=>'게시글을 찾을 수 없습니다.'), 404);
+		$message = '';
+		$data = array('search'=>$content->search, 'member_uid'=>$content->member_uid);
+		if($field == 'status'){
+			if(!isset($_POST['value']) || !is_scalar($_POST['value'])) wp_send_json_error(array('message'=>'상태를 선택해 주세요.'), 400);
+			$status = sanitize_key(wp_unslash($_POST['value']));
+			if(!array_key_exists($status, kboard_content_status_list())) wp_send_json_error(array('message'=>'잘못된 상태입니다.'), 400);
+			$data['status'] = $status;
 		}
-		exit;
+		else if($field == 'board_id'){
+			$board_input = isset($_POST['value']) && is_scalar($_POST['value']) ? (string)wp_unslash($_POST['value']) : '';
+			$board_id = preg_match('/^[1-9][0-9]*$/D', $board_input) ? intval($board_input) : 0;
+			$board = new KBoard($board_id);
+			if(!$board_id || !$board->id) wp_send_json_error(array('message'=>'게시판을 찾을 수 없습니다.'), 400);
+			$data['board_id'] = $board_id;
+		}
+		else{
+			if(!isset($_POST['date'], $_POST['time']) || !is_scalar($_POST['date']) || !is_scalar($_POST['time'])) wp_send_json_error(array('message'=>'날짜와 시간을 입력해 주세요.'), 400);
+			$date = sanitize_text_field(wp_unslash($_POST['date']));
+			$time = sanitize_text_field(wp_unslash($_POST['time']));
+			$resolved = kboard_admin_resolve_date($content->date, $date, $time);
+			if(!$resolved) wp_send_json_error(array('message'=>'유효한 날짜나 시간을 입력해 주세요. 저장된 날짜도 사용할 수 없습니다.'), 400);
+			$data['date'] = $resolved['value'];
+			$message = $resolved['message'];
+		}
+		do_action('kboard_pre_content_list_update', $content);
+		$content->updateContent($data);
+		do_action('kboard_content_list_update', $content);
+		$saved = new KBContent();
+		$saved->initWithUID($uid);
+		if(!$saved->uid || ($field == 'date' && $saved->date != $data['date']) || ($field == 'status' && $saved->status != $data['status']) || ($field == 'board_id' && $saved->board_id != $data['board_id'])) wp_send_json_error(array('message'=>'수정 결과를 확인할 수 없습니다. 목록을 새로고침해 주세요.'), 500);
+		wp_send_json_success(array('message'=>$message ? $message : '저장했습니다.', 'date'=>kboard_admin_date_parts($saved->date), 'status'=>$saved->status, 'board_id'=>intval($saved->board_id)));
 	}
 	
 	/**

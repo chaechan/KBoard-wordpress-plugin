@@ -25,16 +25,54 @@
 	
 	<div class="kboard-comments-list">
 		<form id="kboard-comments-list" method="post">
+			<input type="hidden" id="kboard-comments-update-security" value="<?php echo esc_attr(wp_create_nonce('kboard_comments_list_update'))?>">
 			<?php $table->display()?>
 		</form>
 	</div>
 </div>
 
 <script>
-function kboard_comment_list_update(){
-	jQuery('#kboard-comments-list').find('.spinner').addClass('is-active');
-	jQuery.post(ajaxurl, jQuery('#kboard-comments-list').serialize()+'&action=kboard_comments_list_update', function(res){
-		jQuery('#kboard-comments-list').find('.spinner').removeClass('is-active');
+function kboard_comment_list_update(uid, field){
+	uid = parseInt(uid, 10);
+	if(!uid || jQuery.inArray(field, ['status', 'date']) === -1) return false;
+	var row = jQuery('#kboard-comments-list tr[data-uid="' + uid + '"]');
+	if(!row.length || row.data('kboard-saving')) return false;
+	var data = {action:'kboard_comments_list_update', security:jQuery('#kboard-comments-update-security').val(), comment_uid:uid, update_field:field};
+	var control = row.find('select[name="status[' + uid + ']"]');
+	if(field === 'date'){
+		data.date = row.find('input[name="comment_date[' + uid + ']"]').val();
+		data.time = row.find('input[name="comment_time[' + uid + ']"]').val();
+	}
+	else{
+		data.value = control.val();
+	}
+	var result = row.find('.kboard-inline-update-result');
+	if(!result.length){
+		result = jQuery('<span class="kboard-inline-update-result" role="status" aria-live="polite"></span>').appendTo(row.find('.kboard-comments-list-date'));
+	}
+	result.text('저장 중…');
+	row.data('kboard-saving', true);
+	row.find('select, .kboard-comment-date-update').prop('disabled', true);
+	jQuery.ajax({url:ajaxurl, type:'POST', dataType:'json', data:data}).done(function(response){
+		if(!response || !response.success){
+			result.text(response && response.data && response.data.message ? response.data.message : '저장하지 못했습니다.');
+			if(field === 'status') control.val(row.data('kboard-saved-status'));
+			return;
+		}
+		result.text(response.data.message);
+		if(field === 'date'){
+			row.find('input[name="comment_date[' + uid + ']"]').val(response.data.date.date);
+			row.find('input[name="comment_time[' + uid + ']"]').val(response.data.date.time);
+		}
+		else{
+			row.data('kboard-saved-status', data.value);
+		}
+	}).fail(function(xhr){
+		result.text(xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message ? xhr.responseJSON.data.message : '통신 오류로 저장하지 못했습니다.');
+		if(field === 'status') control.val(row.data('kboard-saved-status'));
+	}).always(function(){
+		row.data('kboard-saving', false);
+		row.find('select, .kboard-comment-date-update').prop('disabled', false);
 	});
 	return false;
 }
@@ -69,6 +107,10 @@ function kboard_comment_list_filter(form){
 }
 
 jQuery(document).ready(function(){
+	jQuery('#kboard-comments-list tr[data-uid]').each(function(){
+		var row = jQuery(this);
+		row.data('kboard-saved-status', row.find('select[name^="status["]').val());
+	});
 	jQuery('.kboard-comment-content-datepicker').datepicker({
 		closeText : '닫기',
 		prevText : '이전달',
@@ -88,6 +130,6 @@ jQuery(document).ready(function(){
 		showMonthAfterYear : true,
 		yearSuffix : '년'
 	});
-	jQuery('.kboard-comment-content-timepicker').timepicker({'timeFormat': 'HH:mm:ss'});
+	jQuery('.kboard-comment-content-timepicker').kboardAdminTimepicker({'timeFormat': 'HH:mm:ss'});
 });
 </script>
